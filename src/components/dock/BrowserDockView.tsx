@@ -45,7 +45,8 @@ export const BrowserDockView: React.FC<BrowserDockViewProps> = ({
     connectOBS, 
     sources, 
     activeScene, 
-    toggleSourceVisibility 
+    toggleSourceVisibility,
+    addSubstitution
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'sub' | 'match' | 'sources' | 'scoreboard'>(initialSubTab);
@@ -227,11 +228,57 @@ export const BrowserDockView: React.FC<BrowserDockViewProps> = ({
               </button>
             </div>
 
+            {/* Instant Test Button */}
+            <button
+              onClick={() => showOnAir()}
+              className="w-full py-1.5 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-[11px] font-bold rounded flex items-center justify-center gap-1.5 cursor-pointer transition active:scale-98"
+            >
+              <span>⚡ ทดสอบบังคับป้ายขึ้นจอทันที</span>
+            </button>
+
             {/* Currently Active or Queued items */}
             <div className="space-y-1.5 pt-1">
-              <div className="text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                Substitution Queue ({queuedSubs.length})
+              <div className="flex items-center justify-between text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                <span>Substitution Queue ({queuedSubs.length})</span>
+                <button
+                  onClick={() => {
+                    addSubstitution({
+                      teamName: match.teamAName || 'Arsenal FC',
+                      playerOutName: 'Bukayo Saka',
+                      playerOutNumber: 7,
+                      playerInName: 'Gabriel Martinelli',
+                      playerInNumber: 11,
+                      minute: match.matchMinutes || 68,
+                      subType: 'tactical'
+                    });
+                  }}
+                  className="text-[#00d2ff] hover:underline cursor-pointer"
+                >
+                  + เพิ่มตัวอย่าง
+                </button>
               </div>
+
+              {queuedSubs.length === 0 && (
+                <div className="p-3 bg-slate-900/90 border border-slate-800 rounded-lg text-center space-y-2">
+                  <div className="text-[11px] text-slate-400">ยังไม่มีคิวเปลี่ยนตัวในระบบ</div>
+                  <button
+                    onClick={() => {
+                      addSubstitution({
+                        teamName: match.teamAName || 'Arsenal FC',
+                        playerOutName: 'Bukayo Saka',
+                        playerOutNumber: 7,
+                        playerInName: 'Gabriel Martinelli',
+                        playerInNumber: 11,
+                        minute: match.matchMinutes || 68,
+                        subType: 'tactical'
+                      });
+                    }}
+                    className="px-3 py-1.5 bg-[#0066ff] hover:bg-[#0055dd] text-white text-xs font-bold rounded shadow flex items-center justify-center gap-1 mx-auto cursor-pointer active:scale-95 transition"
+                  >
+                    <span>+ เพิ่มคิวเปลี่ยนตัวตัวอย่าง</span>
+                  </button>
+                </div>
+              )}
 
               {queuedSubs.map(sub => (
                 <div

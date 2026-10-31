@@ -23,19 +23,52 @@ export const OBSOverlayView: React.FC<{ isStandalone?: boolean }> = ({ isStandal
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [viewport, setViewport] = useState({
+    w: typeof window !== 'undefined' ? window.innerWidth : 1920,
+    h: typeof window !== 'undefined' ? window.innerHeight : 1080
+  });
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setViewport({ w: window.innerWidth, h: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const tplWidth = activeTemplate.resolution === '1920x1080' ? 1920 : 1280;
+  const tplHeight = activeTemplate.resolution === '1920x1080' ? 1080 : 720;
+  const responsiveScale = Math.min(viewport.w / tplWidth, viewport.h / tplHeight);
+
   // If accessed directly as OBS Browser Source (transparent full viewport)
   if (isStandalone) {
     return (
-      <div className="w-screen h-screen overflow-hidden bg-transparent pointer-events-none select-none flex items-end justify-center pb-8">
+      <div 
+        className="fixed inset-0 w-screen h-screen overflow-hidden bg-transparent pointer-events-none select-none"
+        style={{
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'transparent'
+        }}
+      >
         {onAir && (
-          <LiveLowerThirdPreview
-            template={activeTemplate}
-            match={match}
-            substitution={activeSub}
-            customLabels={customLabels}
-            scale={1}
-            forceVisible={true}
-          />
+          <div
+            style={{
+              width: `${tplWidth}px`,
+              height: `${tplHeight}px`,
+              transform: `scale(${responsiveScale})`,
+              transformOrigin: 'top left'
+            }}
+          >
+            <LiveLowerThirdPreview
+              template={activeTemplate}
+              match={match}
+              substitution={activeSub}
+              customLabels={customLabels}
+              scale={1}
+              forceVisible={true}
+            />
+          </div>
         )}
       </div>
     );
