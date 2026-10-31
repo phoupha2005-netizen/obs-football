@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp, getPublicOBSUrl } from '../../context/AppContext';
 import { 
   Radio, 
   Play, 
@@ -53,8 +53,8 @@ export const BrowserDockView: React.FC<BrowserDockViewProps> = ({
 
   const queuedSubs = substitutions.filter(s => s.status === 'queued');
 
-  const dockUrl = `${window.location.origin}/dock`;
-  const overlayUrl = `${window.location.origin}/overlay`;
+  const dockUrl = getPublicOBSUrl('/dock');
+  const overlayUrl = getPublicOBSUrl('/overlay');
 
   const copyDockUrl = () => {
     navigator.clipboard.writeText(dockUrl);

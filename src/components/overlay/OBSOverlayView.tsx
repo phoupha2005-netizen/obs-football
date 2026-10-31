@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp, getPublicOBSUrl } from '../../context/AppContext';
 import { LiveLowerThirdPreview } from '../preview/LiveLowerThirdPreview';
-import { MonitorPlay, Copy, Check, ExternalLink, Play, Square } from 'lucide-react';
+import { MonitorPlay, Copy, Check, ExternalLink, Play, Square, AlertCircle } from 'lucide-react';
 
 export const OBSOverlayView: React.FC<{ isStandalone?: boolean }> = ({ isStandalone = false }) => {
   const { 
@@ -15,7 +15,7 @@ export const OBSOverlayView: React.FC<{ isStandalone?: boolean }> = ({ isStandal
   } = useApp();
 
   const [copied, setCopied] = useState<boolean>(false);
-  const overlayUrl = `${window.location.origin}/overlay`;
+  const overlayUrl = getPublicOBSUrl('/overlay');
 
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(overlayUrl);
@@ -97,6 +97,20 @@ export const OBSOverlayView: React.FC<{ isStandalone?: boolean }> = ({ isStandal
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Copied URL!' : 'Copy Overlay URL'}</span>
           </button>
+        </div>
+
+        {/* Warning card for Google Sign in fix */}
+        <div className="p-3.5 bg-amber-950/40 border border-amber-600/40 rounded-lg text-xs space-y-1 text-amber-200">
+          <div className="flex items-center gap-2 font-bold text-amber-400">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>คำแนะนำ: หากหน้าจอใน OBS ขึ้นหน้า Google Sign in</span>
+          </div>
+          <p className="text-[11px] text-amber-200/90 leading-relaxed">
+            โปรแกรม OBS Studio จะไม่มีข้อมูลคุกกี้ล็อกอิน Google เหมือนในเว็บเบราว์เซอร์ของคุณ ดังนั้นหากใส่ลิงก์ Developer ส่วนตัว (<code>ais-dev-...</code>) หน้าจอ OBS จะถามหาการล็อกอิน Google ทันที
+          </p>
+          <p className="text-[11px] text-emerald-400 font-semibold">
+            ✅ ให้คัดลอกลิงก์ด้านบนนี้ (ซึ่งเป็นลิงก์สาธารณะ <code>ais-pre-...</code> หรือลิงก์ Vercel) ไปวางใน OBS เพื่อให้โหลดกราฟิกได้ทันที 100% โดยไม่ติดหน้าล็อกอิน!
+          </p>
         </div>
       </div>
 

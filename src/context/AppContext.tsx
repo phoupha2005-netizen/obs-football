@@ -20,7 +20,16 @@ import { obsManager } from '../services/obsWebSocket';
 import { resolveTags } from '../services/tagEngine';
 import { auth, loginWithGoogle, logoutUser, testConnection, db } from '../services/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+
+export const getPublicOBSUrl = (path: string = '/overlay') => {
+  let origin = window.location.origin;
+  // If running in development preview, replace private dev proxy with shared public URL
+  if (origin.includes('ais-dev-')) {
+    origin = origin.replace('ais-dev-', 'ais-pre-');
+  }
+  return `${origin}${path}`;
+};
 
 interface AppContextType {
   language: Language;
@@ -349,6 +358,96 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [audioTallyEnabled]);
 
+  // Broadcast synchronizer between OBS Dock, Browser Sources, and Cloud
+  const broadcastAirState = useCallback((air: boolean, currentSub: Substitution | null, currentMatch: Match) => {
+    // 1. BroadcastChannel (Instant same-browser inter-tab/inter-dock relay)
+    try {
+      const channel = new BroadcastChannel('football_studio_broadcast');
+      channel.postMessage({
+        type: 'SYNC_AIR_STATE',
+        onAir: air,
+        activeSub: currentSub,
+        match: currentMatch
+      });
+      channel.close();
+    } catch {}
+
+    // 2. LocalStorage StorageEvent
+    try {
+      localStorage.setItem('fss_live_air_sync', JSON.stringify({
+        onAir: air,
+        activeSub: currentSub,
+        match: currentMatch,
+        timestamp: Date.now()
+      }));
+    } catch {}
+
+    // 3. Firestore Relay (For remote controllers / multi-device)
+    try {
+      setDoc(doc(db, 'obsConnections', 'broadcastState'), {
+        onAir: air,
+        activeSub: currentSub,
+        match: currentMatch,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(() => {});
+    } catch {}
+  }, []);
+
+  // Listen for broadcast sync across windows / OBS Browser Source
+  useEffect(() => {
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel('football_studio_broadcast');
+      channel.onmessage = (event) => {
+        const data = event.data;
+        if (data && data.type === 'SYNC_AIR_STATE') {
+          setOnAir(Boolean(data.onAir));
+          if (data.activeSub !== undefined) setActiveSub(data.activeSub);
+          if (data.match) setMatch(data.match);
+        }
+      };
+    } catch (err) {
+      console.warn('BroadcastChannel not supported', err);
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'fss_live_air_sync' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setOnAir(Boolean(parsed.onAir));
+          if (parsed.activeSub !== undefined) setActiveSub(parsed.activeSub);
+          if (parsed.match) setMatch(parsed.match);
+        } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // Initial read from local storage if available
+    try {
+      const savedAir = localStorage.getItem('fss_live_air_sync');
+      if (savedAir) {
+        const parsed = JSON.parse(savedAir);
+        if (parsed.activeSub) setActiveSub(parsed.activeSub);
+      }
+    } catch {}
+
+    // Listen on Firestore
+    const unsub = onSnapshot(doc(db, 'obsConnections', 'broadcastState'), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data.onAir !== undefined) setOnAir(Boolean(data.onAir));
+        if (data.activeSub) setActiveSub(data.activeSub);
+        if (data.match) setMatch(data.match);
+      }
+    }, () => {});
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener('storage', handleStorage);
+      unsub();
+    };
+  }, []);
+
   // Push Tag values to OBS
   const syncTagsToOBS = useCallback(async (overrideSub: Substitution | null = null) => {
     const currentSub = overrideSub !== undefined ? overrideSub : activeSub;
@@ -544,6 +643,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveSub(target);
     setOnAir(true);
     playTallyBeep(true);
+    broadcastAirState(true, target, match);
 
     // Update sub status
     setSubstitutions(prev => prev.map(s => 
@@ -584,6 +684,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setOnAir(false);
     playTallyBeep(false);
+    broadcastAirState(false, activeSub, match);
 
     if (activeSub) {
       setSubstitutions(prev => prev.map(s => 
