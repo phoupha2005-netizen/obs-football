@@ -1,0 +1,197 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role permission",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "operator"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "Football club or team profile",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "shortName": { "type": "string", "maxLength": 10 },
+        "logoUrl": { "type": "string" },
+        "primaryColor": { "type": "string" },
+        "secondaryColor": { "type": "string" },
+        "coach": { "type": "string", "maxLength": 100 },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "shortName"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Football player profile",
+      "type": "object",
+      "properties": {
+        "teamId": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "number": { "type": "number" },
+        "position": { "type": "string", "enum": ["GK", "DF", "MF", "FW"] },
+        "photoUrl": { "type": "string" },
+        "isStarting": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teamId", "name", "number"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Active live football match",
+      "type": "object",
+      "properties": {
+        "teamAId": { "type": "string" },
+        "teamBId": { "type": "string" },
+        "teamAName": { "type": "string" },
+        "teamBName": { "type": "string" },
+        "teamALogo": { "type": "string" },
+        "teamBLogo": { "type": "string" },
+        "scoreA": { "type": "number" },
+        "scoreB": { "type": "number" },
+        "score2A": { "type": "number" },
+        "score2B": { "type": "number" },
+        "currentHalf": { "type": "string", "enum": ["1H", "HT", "2H", "FT", "ET1", "ET2", "PEN"] },
+        "matchMinutes": { "type": "number" },
+        "matchSeconds": { "type": "number" },
+        "isTimerRunning": { "type": "boolean" },
+        "additionalMinutes": { "type": "number" },
+        "status": { "type": "string", "enum": ["upcoming", "live", "finished"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teamAName", "teamBName", "scoreA", "scoreB"]
+    },
+    "Substitution": {
+      "title": "Substitution",
+      "description": "Player substitution record",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string" },
+        "teamId": { "type": "string" },
+        "teamName": { "type": "string" },
+        "playerOutId": { "type": "string" },
+        "playerOutName": { "type": "string" },
+        "playerOutNumber": { "type": "number" },
+        "playerInId": { "type": "string" },
+        "playerInName": { "type": "string" },
+        "playerInNumber": { "type": "number" },
+        "minute": { "type": "number" },
+        "additionalTime": { "type": "string" },
+        "subType": { "type": "string", "enum": ["tactical", "injury", "double", "emergency"] },
+        "status": { "type": "string", "enum": ["queued", "on_air", "completed", "cancelled"] },
+        "obsStatus": { "type": "string", "enum": ["hidden", "visible", "updating"] },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teamName", "playerOutName", "playerInName", "minute"]
+    },
+    "Template": {
+      "title": "Template",
+      "description": "Lower third design template configuration",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "resolution": { "type": "string", "enum": ["1920x1080", "1280x720"] },
+        "elements": { "type": "string" },
+        "backgroundColor": { "type": "string" },
+        "previewUrl": { "type": "string" },
+        "isDefault": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "resolution"]
+    },
+    "TagMapping": {
+      "title": "TagMapping",
+      "description": "Mapping from broadcast data TAGs to OBS Sources",
+      "type": "object",
+      "properties": {
+        "tag": { "type": "string" },
+        "obsSourceNames": { "type": "string" },
+        "transformRule": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tag"]
+    },
+    "OBSConnection": {
+      "title": "OBSConnection",
+      "description": "OBS Bridge connection and pairing relay session",
+      "type": "object",
+      "properties": {
+        "pairingCode": { "type": "string" },
+        "status": { "type": "string", "enum": ["disconnected", "connected", "standby"] },
+        "scenes": { "type": "string" },
+        "sources": { "type": "string" },
+        "activeScene": { "type": "string" },
+        "commandQueue": { "type": "string" },
+        "lastPing": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["pairingCode"]
+    },
+    "BroadcastHistory": {
+      "title": "BroadcastHistory",
+      "description": "Log of broadcast events and actions",
+      "type": "object",
+      "properties": {
+        "matchId": { "type": "string" },
+        "type": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "details"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile with role"
+    },
+    "/teams/{teamId}": {
+      "schema": "Team",
+      "description": "Football teams list"
+    },
+    "/players/{playerId}": {
+      "schema": "Player",
+      "description": "Football players list"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Active or past football matches"
+    },
+    "/substitutions/{subId}": {
+      "schema": "Substitution",
+      "description": "Substitutions queue and history"
+    },
+    "/templates/{templateId}": {
+      "schema": "Template",
+      "description": "Visual Lower Third templates"
+    },
+    "/tagMappings/{mappingId}": {
+      "schema": "TagMapping",
+      "description": "TAG to OBS Source mappings"
+    },
+    "/obsConnections/{connId}": {
+      "schema": "OBSConnection",
+      "description": "Local OBS Bridge session and pairing channel"
+    },
+    "/broadcastHistory/{historyId}": {
+      "schema": "BroadcastHistory",
+      "description": "Broadcast event log"
+    }
+  }
+}
